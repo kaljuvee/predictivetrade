@@ -2,6 +2,12 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy import text
 import traceback
+import logging
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Create a logger object
+logger = logging.getLogger(__name__)
 
 # Database connection parameters (you'll need to fill these in)
 # db_params = {
