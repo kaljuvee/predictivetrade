@@ -18,10 +18,11 @@ def format_colours(df):
         return f'color: {color}'
 
     # Apply formatting to 'daily_alpha', 'actual_action', and 'predicted_action' columns
-    styled_df = df.style.applymap(color_daily_alpha, subset=['daily_alpha'])\
-                        .applymap(color_actions, subset=['actual_action', 'predicted_action'])
+    styled_df = df.style.map(color_daily_alpha, subset=['daily_alpha'])\
+                        .map(color_actions, subset=['actual_action', 'predicted_action'])
     
     return styled_df
+
 
 def get_news():
     try:
