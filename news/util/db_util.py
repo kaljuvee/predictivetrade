@@ -24,7 +24,10 @@ db_params = {
 # Create a connection to the PostgreSQL database
 engine = create_engine(f"postgresql+psycopg2://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['dbname']}")
 
-metadata = MetaData(bind=engine)
+metadata = MetaData()
+
+# Reflect the 'model_runs' table structure from the database
+metadata.reflect(bind=engine)  # Bind the engine here
 
 # Reflect the 'model_runs' table structure from the database
 model_runs_table = Table('model_run', metadata, autoload=True, autoload_with=engine)
