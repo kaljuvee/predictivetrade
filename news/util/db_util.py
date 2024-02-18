@@ -1,5 +1,5 @@
 import pandas as pd
-from sqlalchemy import create_engine, Table, MetaData, update
+from sqlalchemy import create_engine, Table, MetaData, update, select, func
 from sqlalchemy import text
 import traceback
 import psycopg2
@@ -21,21 +21,42 @@ db_params = {
 }
 # postgres://pddeswvh:uRN_JtBBpy6BAHTgkAiZKKNW05LB_U_z@trumpet.db.elephantsql.com/pddeswvh
 
-
 # Create a connection to the PostgreSQL database
 engine = create_engine(f"postgresql+psycopg2://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['dbname']}")
 
+metadata = MetaData(bind=engine)
+
+# Reflect the 'model_runs' table structure from the database
+model_runs_table = Table('model_run', metadata, autoload=True, autoload_with=engine)
+
+def get_latest_model_runs():
+    with engine.connect() as connection:
+        try:
+            # Find the maximum runid
+            max_runid_query = select([func.max(model_runs_table.c.runid)])
+            max_runid = connection.execute(max_runid_query).scalar()
+
+            # Fetch the records that match the maximum runid
+            latest_runs_query = select([model_runs_table]).where(model_runs_table.c.runid == max_runid)
+            latest_runs_result = connection.execute(latest_runs_query)
+
+            # Process the records as needed
+            latest_runs_data = [
+                {
+                    'topic': run['topic'],
+                    'accuracy': run['accuracy'],
+                    'test_sample': run['test_sample'],
+                    'total_sample': run['total_sample']
+                }
+                for run in latest_runs_result
+            ]
+
+            return latest_runs_data
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return []
 
 def update_prediction(df):
-    # Database connection parameters
-    conn_params = {
-        'dbname': 'your_database_name',
-        'user': 'your_username',
-        'password': 'your_password',
-        'host': 'your_host',
-        'port': 'your_port',  # default is 5432 for PostgreSQL
-    }
-
     # Establish a connection to the database
     conn = psycopg2.connect(**db_params)
     

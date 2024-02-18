@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 import joblib
 from util import db_util
-import random
+import time
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
@@ -84,8 +84,11 @@ def process_results(results, df):
         # Save the results DataFrame to a file
         results_df.to_csv('model_results.csv', index=False)
         print('successfully wrote results to file: ', results_df)
-        bigint = random.getrandbits(64)
-        results_df['runid'] = bigint
+        # Get the current time in seconds since the Epoch
+        current_time_seconds = time.time()
+
+        # Convert the current time to a bigint by removing the decimal part
+        runid = int(current_time_seconds)
         db_util.write_table(results_df, 'model_run')
         print('successfully wrote results: ', results_df)
         print('avg accuracy: ', results_df['accuracy'].mean())
