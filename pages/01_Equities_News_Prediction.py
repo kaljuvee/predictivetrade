@@ -4,7 +4,24 @@ from datetime import datetime, timedelta
 import time
 from util import db_util
 
-st.title("News Signal (Globenewswire)")
+st.title("Equities Event Based Prediction")
+
+def format_colours(df):
+    # Function to apply color based on the condition for 'daily_alpha' column
+    def color_daily_alpha(val):
+        color = 'red' if val < 0 else 'green'
+        return f'color: {color}'
+
+    # Function to apply color based on the condition for 'actual_action' and 'predicted_action' columns
+    def color_actions(val):
+        color = 'green' if val == 'long' else 'red'
+        return f'color: {color}'
+
+    # Apply formatting to 'daily_alpha', 'actual_action', and 'predicted_action' columns
+    styled_df = df.style.applymap(color_daily_alpha, subset=['daily_alpha'])\
+                        .applymap(color_actions, subset=['actual_action', 'predicted_action'])
+    
+    return styled_df
 
 def get_news():
     try:
@@ -19,8 +36,8 @@ def get_news():
         
         # Drop the 'link' column
         news_df = news_df.drop(columns=['link'])
-        
-        return news_df
+        styled_df = format_colours(news_df)
+        return styled_df
     
     except Exception as e:
         print(f"An error occurred while fetching and processing news: {e}")
