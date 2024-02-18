@@ -1,0 +1,17 @@
+feedparser
+pandas
+beautifulsoup4
+lxml
+websocket-client
+PyYAML
+pandas-gbq
+psycopg2-binary
+SQLAlchemy
+holidays
+yfinance
+openai
+pytz
+twilio
+spacy-transformers
+scikit-learn
+joblib
