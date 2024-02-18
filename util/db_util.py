@@ -184,29 +184,3 @@ def write_news_price(df):
     except Exception as e:
         print(f"An error occurred: {e}")
         print(traceback.format_exc())
-
-
-def update_prediction_old(df):
-    # Create MetaData object
-    metadata = MetaData()
-
-    # Reflect the table structure from the database to the MetaData object
-    metadata.reflect(bind=engine)
-
-    # Access the 'news_price' table from the reflected metadata
-    news_price_table = metadata.tables['news_price']
-
-    with engine.connect() as conn:
-        for index, row in df.iterrows():
-            try:
-                # Using 'link' as the unique identifier for the row to be updated
-                print('updating prediction for: ', row['link'])
-                stmt = update(news_price_table).\
-                    where(news_price_table.c.link == row['link']).\
-                    values(prediction=row['prediction'], confidence=row['confidence'])
-                conn.execute(stmt)
-            except Exception as e:
-                print(f"An error occurred while updating prediction and confidence for link: {row['link']}, error: {e}")
-                continue  # Skip to the next row if an error occurs
-
-    print("Predictions and confidence scores updated successfully.")
