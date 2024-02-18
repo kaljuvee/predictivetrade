@@ -9,10 +9,10 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy import text
 import argparse
-import news_util
+from util import news_util
 import pytz
-from db_util import engine
-import db_util
+from util.db_util import engine
+from util import db_util
 
 sector = 'biotech'
 # Initialize rss_dict as a global variable
