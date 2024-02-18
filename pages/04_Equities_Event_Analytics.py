@@ -7,5 +7,5 @@ from news.util import db_util
 st.title("Equities Event Analytics")
 
 
-df = db_util.get_latest_model_runs()
+df = pd.read_csv('news/models/model_results.csv')
 st.write("Latest model runs:", df)
