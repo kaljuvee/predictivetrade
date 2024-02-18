@@ -37,13 +37,17 @@ def get_news():
         
         # Drop the 'link' column
         news_df = news_df.drop(columns=['link'])
-        styled_df = format_colours(news_df)
-        return styled_df
+
+        # Apply formatting to the DataFrame and obtain a Styler object for display
+        
+        # Return the original DataFrame for data manipulations and the Styler for display
+        return news_df
     
     except Exception as e:
         print(f"An error occurred while fetching and processing news: {e}")
         # Return an empty DataFrame in case of error
-        return pd.DataFrame()
+        return pd.DataFrame() # Return two empty DataFrames to match the expected return type
+
 
 def display_paginated_df(news_df, page_size=50):
     
@@ -55,6 +59,9 @@ def display_paginated_df(news_df, page_size=50):
     
     # Ensure the DataFrame is sorted by 'published_est' in descending order
     news_df = news_df.sort_values(by='published_est', ascending=False)
+  
+    # Now apply styling to display_df to create a Styler object for display purposes only
+    #styled_df = format_colours(display_df)
 
     # Search box to filter by ticker
     search_query = st.text_input("Filter by ticker:", "")
@@ -83,8 +90,7 @@ def display_paginated_df(news_df, page_size=50):
 news_df = get_news()
 # Define the columns to include in display_df
 columns_to_include = ['ticker', 'title', 'topic', 'published_est', 'daily_alpha', 'actual_action', 'predicted_action', 'confidence']
-# Create display_df as a subset of news_df with the specified columns
-display_df = news_df[columns_to_include]
+display_df = news_df[columns_to_include].copy()  # Create a copy for display
 
 # Call the simplified function without the need for a button
 display_paginated_df(display_df, page_size=50)
