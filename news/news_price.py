@@ -1,9 +1,6 @@
 import pandas as pd
-from db_util import engine
-import db_util
-import date_util
-import price_util
-#import news_prediction
+from util.db_util import engine
+from util import db_util, date_util, price_util
 
 def main():
     news_df = db_util.get_news_all()

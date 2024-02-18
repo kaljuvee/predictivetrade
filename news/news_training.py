@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 import joblib
-import db_util
+from util import db_util
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")

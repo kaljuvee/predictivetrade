@@ -137,14 +137,12 @@ def read_news_item():
     news_df = pd.read_sql_query(sql_query, engine)
     return news_df
 
-import pandas as pd
-
 def read_news_price():
     # Define the SQL query
     sql_query = '''
     SELECT distinct ticker, title, link, topic, published_est, market,
        begin_price, end_price, index_begin_price, index_end_price,
-       return, index_return, daily_alpha, action
+       return as daily_return, index_return, daily_alpha, action as actual_action
     FROM news_price
     ORDER BY published_est DESC
     '''
