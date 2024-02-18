@@ -20,3 +20,4 @@ pytz
 twilio
 scikit-learn
 joblib
+alpaca-trade-api
