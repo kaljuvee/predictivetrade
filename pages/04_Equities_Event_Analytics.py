@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import time
-from util import db_util
+from news.util import db_util
 
 st.title("Equities Event Analytics")
 
