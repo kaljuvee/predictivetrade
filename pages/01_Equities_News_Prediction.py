@@ -49,41 +49,44 @@ def get_news():
         return pd.DataFrame() # Return two empty DataFrames to match the expected return type
 
 
+import streamlit as st
+
 def display_paginated_df(news_df, page_size=50):
+    try:
+        provider_options = ['Globenewswire']
+        selected_provided = st.selectbox("Select provider:", provider_options)
+
+        sector_options = ['biotech']
+        selected_sector = st.selectbox("Select sector:", sector_options)
+        
+        # Ensure the DataFrame is sorted by 'published_est' in descending order
+        news_df = news_df.sort_values(by='published_est', ascending=False)
     
-    provider_options = ['Globenewswire']
-    selected_provided = st.selectbox("Select provider:", provider_options)
+        # Search box to filter by ticker
+        search_query = st.text_input("Filter by ticker:", "")
 
-    sector_options = ['biotech']
-    selected_sector = st.selectbox("Select sector:", sector_options)
-    
-    # Ensure the DataFrame is sorted by 'published_est' in descending order
-    news_df = news_df.sort_values(by='published_est', ascending=False)
-  
-    # Now apply styling to display_df to create a Styler object for display purposes only
-    #styled_df = format_colours(display_df)
+        # Filter the DataFrame based on the search query
+        if search_query:
+            # Ensure case-insensitive search by converting both to uppercase
+            filtered_df = news_df[news_df['ticker'].str.upper().str.contains(search_query.upper())]
+        else:
+            filtered_df = news_df
 
-    # Search box to filter by ticker
-    search_query = st.text_input("Filter by ticker:", "")
+        # Pagination setup for the filtered DataFrame
+        total_pages = len(filtered_df) // page_size + (len(filtered_df) % page_size > 0)
+        selected_page = st.selectbox("Select page:", list(range(total_pages)))
 
-    # Filter the DataFrame based on the search query
-    if search_query:
-        # Ensure case-insensitive search by converting both to uppercase
-        filtered_df = news_df[news_df['ticker'].str.upper().str.contains(search_query.upper())]
-    else:
-        filtered_df = news_df
+        # Calculate start and end row indices for the current page
+        start_row = page_size * selected_page
+        end_row = start_row + page_size
 
-    # Pagination setup for the filtered DataFrame
-    total_pages = len(filtered_df) // page_size + (len(filtered_df) % page_size > 0)
-    selected_page = st.selectbox("Select page:", list(range(total_pages)))
+        # Displaying the filtered DataFrame slice
+        st.write(f"Displaying rows {start_row+1} to {min(end_row, len(filtered_df))} of {len(filtered_df)}")
+        st.markdown(filtered_df.iloc[start_row:end_row].to_html(escape=False, index=False), unsafe_allow_html=True)
 
-    # Calculate start and end row indices for the current page
-    start_row = page_size * selected_page
-    end_row = start_row + page_size
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
 
-    # Displaying the filtered DataFrame slice
-    st.write(f"Displaying rows {start_row+1} to {min(end_row, len(filtered_df))} of {len(filtered_df)}")
-    st.markdown(filtered_df.iloc[start_row:end_row].to_html(escape=False, index=False), unsafe_allow_html=True)
 
 # Usage:
 # Assuming 'get_news' function is defined and fetches the news DataFrame

@@ -142,7 +142,7 @@ def read_news_price():
     sql_query = '''
     SELECT distinct ticker, title, link, topic, published_est, market,
        begin_price, end_price, index_begin_price, index_end_price,
-       return as daily_return, index_return, daily_alpha, action as actual_action
+       daily_return, index_return, daily_alpha, actual_action
     FROM news_price
     ORDER BY published_est DESC
     '''
@@ -166,11 +166,18 @@ def read_news_price():
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
-
 def write_news_item(df):
     try:
         if not df.empty:
             df.to_sql('news_item', engine, if_exists='append', index=False)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        print(traceback.format_exc())
+
+def write_table(df, table_name):
+    try:
+        if not df.empty:
+            df.to_sql(table_name, engine, if_exists='append', index=False)
     except Exception as e:
         print(f"An error occurred: {e}")
         print(traceback.format_exc())

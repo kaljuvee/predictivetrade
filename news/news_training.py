@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 import joblib
 from util import db_util
+import random
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
@@ -53,22 +54,6 @@ def train_and_save_model_for_topic(topic, df):
         print(f"Error processing topic {topic}: {e}")
         return None, None, None, None
 
-def classify_new_items(text, model_filename, vectorizer_filename):
-    # Load the saved model and vectorizer
-    loaded_model = joblib.load(model_filename)
-    loaded_tfidf = joblib.load(vectorizer_filename)
-
-    # Preprocess the new text
-    processed_text = preprocess(text)  # Ensure preprocess function is defined
-
-    # Transform the text using the loaded TF-IDF vectorizer
-    transformed_text = loaded_tfidf.transform([processed_text])
-
-    # Predict the class for the new text
-    prediction = loaded_model.predict(transformed_text)
-
-    return prediction
-
 def train_models_per_topic(df):
     results = []
     for topic in df['topic'].unique():
@@ -78,7 +63,7 @@ def train_models_per_topic(df):
             results.append({
                 'topic': topic,
                 'accuracy': accuracy,
-                'support': support
+                'test_sample': support
             })
         except Exception as e:
             print(f"Error training/saving model for topic '{topic}': {e}")
@@ -98,6 +83,10 @@ def process_results(results, df):
         results_df.fillna(0, inplace=True)
         # Save the results DataFrame to a file
         results_df.to_csv('model_results.csv', index=False)
+        print('successfully wrote results to file: ', results_df)
+        bigint = random.getrandbits(64)
+        results_df['runid'] = bigint
+        db_util.write_table(results_df, 'model_run')
         print('successfully wrote results: ', results_df)
         print('avg accuracy: ', results_df['accuracy'].mean())
     except Exception as e:
@@ -111,7 +100,7 @@ def main():
     print('df: ', df)
     # Apply formatting to the 'topic' column of the DataFrame: lowercase, replace spaces and forward slashes with underscores
     df['topic'] = df['topic'].str.lower().str.replace(" ", "_").str.replace("/", "_").str.replace("&", "").str.replace("'", "")
-    df = df.dropna(subset=['topic', 'action'])
+    df = df.dropna(subset=['topic', 'actual_action'])
 
     # Train models for each topic and save them
     results = train_models_per_topic(df)
