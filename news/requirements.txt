@@ -12,7 +12,6 @@ yfinance
 openai
 pytz
 twilio
-spacy-transformers
 scikit-learn
 joblib
 spacy
