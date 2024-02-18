@@ -9,7 +9,7 @@ st.title("News Signal (Globenewswire)")
 def get_news():
     try:
         # Fetch news data using db_util
-        news_df = db_util.get_news()
+        news_df = db_util.get_news_prices()
         
         # Format the 'ticker' column with hyperlinks
         news_df['ticker'] = '<a href="https://www.marketwatch.com/investing/stock/' + news_df['ticker'] + '" target="_blank">' + news_df['ticker'] + '</a>'

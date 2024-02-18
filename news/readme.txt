@@ -5,6 +5,9 @@ $ source myenv/bin/activate
 $ pip install -r requirements.txt
 $ python news_item.py -s biotech
 
+# Download spacy
+python -m spacy download en_core_web_sm en_core_web_tr
+
 # Open AI Fine Tuning using Open AI CLI
 
 openai tools fine_tunes.prepare_data -f data/news.jsonl -q
