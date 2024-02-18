@@ -5,7 +5,48 @@ import ccxt
 from plotly.subplots import make_subplots
 import numpy as np
 import plotly.express as px
+import statsmodels.api as sm
 
+def plot_benchmark_returns(cumulative_portfolio_returns, cumulative_benchmark_returns, benchmark_ticker='SPY'):
+    # Normalize the returns to start at 1 (100%) for better comparison
+    normalized_portfolio_returns = (1 + cumulative_portfolio_returns).fillna(0)
+    normalized_benchmark_returns = (1 + cumulative_benchmark_returns).fillna(0)
+
+    # Create traces
+    portfolio_trace = go.Scatter(x=normalized_portfolio_returns.index, y=normalized_portfolio_returns, mode='lines', name='Portfolio')
+    benchmark_trace = go.Scatter(x=normalized_benchmark_returns.index, y=normalized_benchmark_returns, mode='lines', name=f'{benchmark_ticker} Benchmark')
+
+    # Layout
+    layout = go.Layout(title='Portfolio vs. Benchmark Equity Line',
+                       xaxis=dict(title='Date'),
+                       yaxis=dict(title='Cumulative Returns'))
+
+    # Create figure and add traces
+    fig = go.Figure(data=[portfolio_trace, benchmark_trace], layout=layout)
+
+    # Show plot
+    return fig
+
+def plot_equity_line(signals):
+    # Create a plotly figure
+    fig = go.Figure()
+
+    # Add a line trace for cumulative PnL
+    fig.add_trace(
+        go.Scatter(x=signals['Timestamp'], y=signals['Cumulative PnL'], mode='lines', name='Cumulative PnL')
+    )
+
+    # Update layout
+    fig.update_layout(
+        height=600,
+        width=800,
+        title_text="Cumulative PnL Over Time",
+        xaxis_title="Time",
+        yaxis_title="Cumulative PnL",
+        showlegend=False
+    )
+
+    st.plotly_chart(fig)
 
 def plot_zscore(all_data, asset1, asset2):
     # Filter data for each asset
@@ -53,8 +94,8 @@ def plot_all_zscores(all_data, sorted_pairs, page, pairs_per_page=5, subplot_hei
         ratios = merged_data['close_asset1'] / merged_data['close_asset2']
         z_scores = zscore(ratios)
         
-        subplot_title = f'Z-score spread for {asset1} and {asset2}'
-        fig.update_yaxes(title=subplot_title, row=i, col=1)
+        subplot_title = f'{asset1} vs {asset2}'
+        fig.update_yaxes(title=subplot_title, row=i+1, col=1)
         # Add trace to the subplot
         fig.add_trace(go.Scatter(x=merged_data['timestamp'], y=z_scores, mode='lines', name=f'{asset1} vs {asset2}'), row=i+1, col=1)
 
@@ -64,22 +105,82 @@ def plot_all_zscores(all_data, sorted_pairs, page, pairs_per_page=5, subplot_hei
     # Display the plot in Streamlit
     st.plotly_chart(fig)
 
-def plot_prices(all_data, symbols):
-    # Normalize each symbol's prices to start at 100 using BTC's first price
-    btc_first_price = all_data[all_data['symbol'] == 'BTC/USD']['close'].iloc[0]
-    normalized_data = all_data.pivot(index='timestamp', columns='symbol', values='close')
-    normalized_data = normalized_data.div(normalized_data.iloc[0]) * 100
+def plot_prices(all_data, symbols, benchmark):
+    try:
+        # Remove duplicates from the symbols list and ensure the benchmark symbol is included only once
+        symbols = list(set(symbols))  # Convert symbols list to a set to remove duplicates, then back to a list
+        if symbols.count(benchmark) > 1:  # If the benchmark symbol appears more than once
+            symbols.remove(benchmark)  # Remove the extra occurrences
 
-    # Plotting
-    fig = go.Figure()
-    for symbol in symbols:
-        if symbol in normalized_data.columns:
-            fig.add_trace(go.Scatter(x=normalized_data.index, y=normalized_data[symbol], mode='lines', name=symbol))
+        # Check if 'all_data' contains the benchmark symbol
+        if not all_data[all_data['symbol'] == benchmark].empty:
+            # Normalize each symbol's prices to start at 100 using the benchmark's first price
+            normalized_data = all_data.pivot(index='timestamp', columns='symbol', values='close')
+            normalized_data = normalized_data.div(normalized_data.iloc[0]) * 100
 
-    fig.update_layout(title='Normalized Prices Relative to BTC', xaxis_title='Timestamp', yaxis_title='Normalized Price')
+            # Plotting
+            fig = go.Figure()
+            for symbol in symbols:
+                if symbol in normalized_data.columns:
+                    fig.add_trace(go.Scatter(x=normalized_data.index, y=normalized_data[symbol], mode='lines', name=symbol))
 
-    # Display the plot in Streamlit
-    st.plotly_chart(fig)
+            fig.update_layout(title=f'Normalized Prices Relative to {benchmark}', xaxis_title='Timestamp', yaxis_title='Normalized Price')
+
+            # Display the plot in Streamlit
+            st.plotly_chart(fig)
+        else:
+            # Handle the case where the benchmark symbol is not found in 'all_data'
+            st.error(f"Benchmark symbol '{benchmark}' not found in the data.")
+    except Exception as e:
+        st.error(f"An error occurred while plotting prices: {e}")
+
+
+def plot_cointegration_heatmap(returns):
+    try:
+        # Fill NaN values with 0s
+        returns_filled = returns.fillna(0)
+
+        assets = returns_filled.columns
+        p_values_matrix = pd.DataFrame(index=assets, columns=assets, data=np.nan)
+        
+        # Perform pairwise cointegration tests and store p-values
+        for asset1 in assets:
+            for asset2 in assets:
+                if asset1 != asset2:
+                    try:
+                        coint_test = sm.tsa.stattools.coint(returns_filled[asset1], returns_filled[asset2])
+                        p_values_matrix.loc[asset1, asset2] = coint_test[1]  # p-value is at index 1
+                    except Exception as e:
+                        print(f"Error performing cointegration test between {asset1} and {asset2}: {e}")
+                        p_values_matrix.loc[asset1, asset2] = np.nan
+
+        # Create a heatmap using Plotly
+        fig = px.imshow(p_values_matrix, 
+                        text_auto=True,
+                        aspect="auto", 
+                        color_continuous_scale='RdYlGn_r',  # Red-Yellow-Green color scale (reversed)
+                        labels=dict(x="Asset", y="Asset", color="P-Value"))
+
+        fig.update_layout(title='Cointegration Test P-Values Heatmap', xaxis_nticks=36, yaxis_nticks=36)
+
+        # Display the plot
+        fig.show()
+
+        # Flatten the p-values matrix and reset index
+        coint_pairs = p_values_matrix.unstack().reset_index()
+        coint_pairs.columns = ['Asset1', 'Asset2', 'P-Value']
+
+        # Remove NaNs and sort by p-values
+        coint_pairs = coint_pairs.dropna().sort_values(by='P-Value')
+
+        return coint_pairs
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return pd.DataFrame()
+
+# Example Usage (assuming 'returns' is a DataFrame of asset returns)
+# sorted_pairs = plot_cointegration_heatmap(returns)
 
 def plot_returns(all_data):
     # Convert columns to numeric types (excluding 'timestamp' and 'symbol')
