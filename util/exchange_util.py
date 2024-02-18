@@ -29,3 +29,31 @@ def get_prices(selected_symbols, timeframe):
             st.error(f"Error fetching data for {symbol}: {e}")
 
     return all_data
+
+def get_top_coins_by_volume(exchange_id, limit=15):
+    try:
+        # Initialize the exchange
+        exchange_class = getattr(ccxt, exchange_id)
+        exchange = exchange_class()
+
+        # Load markets
+        exchange.load_markets()
+
+        # Fetch ticker information for all symbols
+        tickers = exchange.fetch_tickers()
+
+        # Specify the base currencies you want to exclude
+        excluded_base_currencies = ['GBP', 'EUR', 'CHF']
+
+        # Filter out tickers that have the excluded base currencies
+        filtered_tickers = {symbol: ticker for symbol, ticker in tickers.items()
+                            if not any(base_currency in symbol for base_currency in excluded_base_currencies)}
+
+        # Sort the filtered tickers by volume and get the top 'limit' tickers
+        sorted_tickers = sorted(filtered_tickers.values(), key=lambda x: x['quoteVolume'], reverse=True)[:limit]
+
+        # Create a list of top coins with their volumes
+        top_coins = [ticker['symbol'] for ticker in sorted_tickers]
+        return top_coins
+    except Exception as e:
+        return str(e)
