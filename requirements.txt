@@ -21,3 +21,4 @@ twilio
 scikit-learn
 joblib
 alpaca-trade-api
+statsmodels
