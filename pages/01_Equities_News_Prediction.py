@@ -3,45 +3,13 @@ import pandas as pd
 from datetime import datetime, timedelta
 import time
 from util import db_util
-from sqlalchemy import create_engine, Table, MetaData, update
-from sqlalchemy import text
-import traceback
-import psycopg2
 
 st.title("News Signal (Globenewswire)")
-
-def get_news_prediction():
-    # Define the SQL query
-    sql_query = '''
-    SELECT distinct ticker, title, link, topic, published_est, market,
-       begin_price, end_price, index_begin_price, index_end_price,
-       return as daily_return, index_return, daily_alpha, action as actual_action, prediction as predicted_action, confidence
-    FROM news_price
-    ORDER BY published_est DESC
-    '''
-
-    try:
-        # Fetch data into a pandas DataFrame using the engine
-        news_df = pd.read_sql_query(sql_query, engine)
-
-        # Check if the DataFrame is empty
-        if news_df.empty:
-            print("The query returned no results.")
-            # Depending on your logging setup, you might want to use logging.warning or logging.info instead of print
-            # logging.warning("The query returned no results.")
-        else:
-            return news_df
-
-    except Exception as e:
-        print(f"An error occurred while fetching news price data: {e}")
-        # Depending on your logging setup, you might want to use logging.error or logging.exception instead of print
-        # logging.error(f"An error occurred while fetching news price data: {e}")
-        return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 def get_news():
     try:
         # Fetch news data using db_util
-        news_df = get_news_prediction()
+        news_df = db_util.get_news_prediction()
         
         # Format the 'ticker' column with hyperlinks
         news_df['ticker'] = '<a href="https://www.marketwatch.com/investing/stock/' + news_df['ticker'] + '" target="_blank">' + news_df['ticker'] + '</a>'
@@ -61,6 +29,9 @@ def get_news():
 
 def display_paginated_df(news_df, page_size=50):
     
+    provider_options = ['Globenewswire']
+    selected_provided = st.selectbox("Select provider:", provider_options)
+
     sector_options = ['biotech']
     selected_sector = st.selectbox("Select sector:", sector_options)
     
@@ -92,7 +63,10 @@ def display_paginated_df(news_df, page_size=50):
 # Usage:
 # Assuming 'get_news' function is defined and fetches the news DataFrame
 news_df = get_news()
+# Define the columns to include in display_df
+columns_to_include = ['ticker', 'title', 'topic', 'published_est', 'daily_alpha', 'actual_action', 'predicted_action', 'confidence']
+# Create display_df as a subset of news_df with the specified columns
+display_df = news_df[columns_to_include]
 
 # Call the simplified function without the need for a button
-display_paginated_df(news_df, page_size=50)
-
+display_paginated_df(display_df, page_size=50)

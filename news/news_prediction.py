@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 import joblib
-import db_util
+from util import db_util
 import time
 
 # Load spaCy model
@@ -57,7 +57,7 @@ def predict_news(df):
             predictions.append(None)  # Append None or a default value if prediction fails
 
     # Add the predictions as a new column to the DataFrame
-    df['prediction'] = predictions
+    df['predicted_action'] = predictions
     df['confidence'] = condidence_df['accuracy']
     
     return df
@@ -67,7 +67,7 @@ def main():
     # Load your dataset
     df = db_util.get_news_all()
     pred_df = predict_news(df)
-    pred_df.to_csv('prediction.csv')
+    pred_df.to_csv('predictions.csv')
     db_util.update_prediction(df)
    
 

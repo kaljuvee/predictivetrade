@@ -1,8 +1,7 @@
 import pandas as pd
-from sqlalchemy import create_engine, Table, MetaData, update
+from sqlalchemy import create_engine
 from sqlalchemy import text
 import traceback
-import psycopg2
 
 # Database connection parameters (you'll need to fill these in)
 # db_params = {
@@ -21,72 +20,67 @@ db_params = {
 }
 # postgres://pddeswvh:uRN_JtBBpy6BAHTgkAiZKKNW05LB_U_z@trumpet.db.elephantsql.com/pddeswvh
 
+def get_news_prediction():
+    # Define the SQL query
+    sql_query = '''
+    SELECT distinct ticker, title, link, topic, published_est, market,
+       begin_price, end_price, index_begin_price, index_end_price,
+       daily_return, index_return, daily_alpha, actual_action, predicted_action, confidence
+    FROM news_price
+    ORDER BY published_est DESC
+    '''
+
+    try:
+        # Fetch data into a pandas DataFrame using the engine
+        news_df = pd.read_sql_query(sql_query, engine)
+
+        if news_df.empty:
+            logger.warning("The query returned no results.")
+            return pd.DataFrame()  # Return an empty DataFrame for consistency
+        else:
+            return news_df
+    except Exception as e:
+        logger.error(f"An error occurred while executing the query: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of an error
 
 # Create a connection to the PostgreSQL database
 engine = create_engine(f"postgresql+psycopg2://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['dbname']}")
 
-
-def update_prediction(df):
-    # Database connection parameters
-    conn_params = {
-        'dbname': 'your_database_name',
-        'user': 'your_username',
-        'password': 'your_password',
-        'host': 'your_host',
-        'port': 'your_port',  # default is 5432 for PostgreSQL
-    }
-
-    # Establish a connection to the database
-    conn = psycopg2.connect(**db_params)
-    
+def write_bid_ask(df):
     try:
-        # Create a cursor object
-        cur = conn.cursor()
-
-        for index, row in df.iterrows():
-            try:
-                #print(f"Updating prediction and confidence for link: {row['link']}")
-                
-                # SQL statement to update prediction and confidence
-                update_sql = """
-                UPDATE news_price
-                SET prediction = %s, confidence = %s
-                WHERE link = %s;
-                """
-                # Values to substitute into the SQL statement
-                values = (row['prediction'], row['confidence'], row['link'])
-
-                # Print SQL statement for debugging purposes
-                print("Executing SQL:", update_sql.strip())
-                print("With values:", values)               
-                # Execute the update statement
-                cur.execute(update_sql, (row['prediction'], row['confidence'], row['link']))
-                
-                # Commit the transaction
-                conn.commit()
-                print(f"Row updated for link: {row['link']}")
-                
-            except Exception as e:
-                # Rollback the transaction in case of error
-                conn.rollback()
-                print(f"An error occurred while updating prediction and confidence for link: {row['link']}, error: {e}")
-                continue  # Skip to the next row if an error occurs
-
-        # Close the cursor
-        cur.close()
-        print("Predictions and confidence scores updated successfully.")
-        
+        if not df.empty:
+            with engine.connect() as conn:
+                df.to_sql('ccxt_bid_ask', conn, if_exists='append', index=False)
     except Exception as e:
-        print(f"An error occurred while connecting to the database: {e}")
-    
-    finally:
-        # Close the connection
-        conn.close()
+        print(f"An error occurred: {e}")
+        print(traceback.format_exc())
 
-# Replace 'your_database_name', 'your_username', 'your_password', 'your_host', and 'your_port' with your actual database connection details.
+def write_pnl(df):
+    try:
+        if not df.empty:
+            with engine.connect() as conn:
+                df.to_sql('pnl', conn, if_exists='append', index=False)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        print(traceback.format_exc())
 
-def get_engine():
-    return engine
+def store(df, table):
+    try:
+        if not df.empty:
+            with engine.connect() as conn:
+                df.to_sql(table, conn, if_exists='append', index=False)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        print(traceback.format_exc())
+
+def get_prices(exchange):
+    sql_query = text('''
+    SELECT symbol, timestamp, bid, ask, (bid + ask)/2 as close, exchange from ccxt_bid_ask
+    WHERE exchange = :exchange
+    ''')
+    with engine.connect() as conn:
+        prices_df = pd.read_sql_query(sql_query, conn, params={'exchange': exchange})
+    return prices_df
 
 def get_news():
     sql_query = text('''
@@ -102,83 +96,32 @@ def get_news():
         print(f"An error occurred while fetching news: {e}")
         # Return an empty DataFrame in case of error
         return pd.DataFrame()
+    
+def get_bid_ask(exchange, symbols):
+    # Generate a list of parameter placeholders (e.g., ':symbol1', ':symbol2', ...)
+    symbol_placeholders = [f':symbol{i}' for i in range(len(symbols))]
 
-def get_news_all():
-    sql_query = text('''
-    SELECT distinct ticker, title, link, topic, published_est, market FROM news_item
+    # Create the SQL query using `text()` and include placeholders
+    sql_query = text(f'''
+    SELECT symbol, timestamp, bid, ask, (bid + ask)/2 as close, exchange from ccxt_bid_ask
+    WHERE exchange = :exchange AND symbol IN ({', '.join(symbol_placeholders)})
+    ORDER BY timestamp ASC
     ''')
-    try:
-        with engine.connect() as conn:
-            df = pd.read_sql_query(sql_query, conn)
-        return df
-    except Exception as e:
-        print(f"An error occurred while fetching news: {e}")
-        # Return an empty DataFrame in case of error
-        return pd.DataFrame()
 
-def read_news_item():
-    # Define the SQL query
+    # Create a dictionary that maps placeholders to actual symbol values
+    params = {f'symbol{i}': symbol for i, symbol in enumerate(symbols)}
+    params['exchange'] = exchange  # Add exchange to the parameters
+
+    with engine.connect() as conn:
+        # Pass the query and the parameters dictionary to `pd.read_sql_query`
+        prices_df = pd.read_sql_query(sql_query, conn, params=params)
+    return prices_df
+
+def get_symbols(exchange):
     sql_query = '''
-    select distinct
-    ticker,
-    title,
-    summary,
-    published_gmt,
-    description,
-    link,
-    sector,
-    topic,
-    published_est,
-    market,
-    hour_of_day 
-    from news_item
+    SELECT DISTINCT symbol FROM ccxt_bid_ask
+    WHERE exchange = %s
     '''
-    # Fetch data into a pandas DataFrame using the engine
-    news_df = pd.read_sql_query(sql_query, engine)
-    return news_df
-
-def read_news_prediction():
-    # Define the SQL query
-    sql_query = '''
-    SELECT distinct ticker, title, link, topic, published_est, market,
-       begin_price, end_price, index_begin_price, index_end_price,
-       return as daily_return, index_return, daily_alpha, action as actual_action, prediction as predicted_action, confidence
-    FROM news_price
-    ORDER BY published_est DESC
-    '''
-
-    try:
-        # Fetch data into a pandas DataFrame using the engine
-        news_df = pd.read_sql_query(sql_query, engine)
-
-        # Check if the DataFrame is empty
-        if news_df.empty:
-            print("The query returned no results.")
-            # Depending on your logging setup, you might want to use logging.warning or logging.info instead of print
-            # logging.warning("The query returned no results.")
-        else:
-            return news_df
-
-    except Exception as e:
-        print(f"An error occurred while fetching news price data: {e}")
-        # Depending on your logging setup, you might want to use logging.error or logging.exception instead of print
-        # logging.error(f"An error occurred while fetching news price data: {e}")
-        return pd.DataFrame()  # Return an empty DataFrame in case of error
-
-
-
-def write_news_item(df):
-    try:
-        if not df.empty:
-            df.to_sql('news_item', engine, if_exists='append', index=False)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        print(traceback.format_exc())
-
-def write_news_price(df):
-    try:
-        if not df.empty:
-            df.to_sql('news_price', engine, if_exists='append', index=False)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        print(traceback.format_exc())
+    symbols_df = pd.read_sql_query(sql_query, engine, params=(exchange,))
+    symbols_list = symbols_df['symbol'].tolist()
+    return symbols_list

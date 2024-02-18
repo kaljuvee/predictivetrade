@@ -86,10 +86,10 @@ def create_returns(news_df):
 
     # Calculate returns and other metrics only if all required data is available
     try:
-        processed_df['return'] = (processed_df['end_price'] - processed_df['begin_price']) / processed_df['begin_price']
+        processed_df['daily_return'] = (processed_df['end_price'] - processed_df['begin_price']) / processed_df['begin_price']
         processed_df['index_return'] = (processed_df['index_end_price'] - processed_df['index_begin_price']) / processed_df['index_begin_price']
-        processed_df['daily_alpha'] = processed_df['return'] - processed_df['index_return']
-        processed_df['action'] = np.where(processed_df['daily_alpha'] >= 0, 'long', 'short')
+        processed_df['daily_alpha'] = processed_df['daily_return'] - processed_df['index_return']
+        processed_df['actual_action'] = np.where(processed_df['daily_alpha'] >= 0, 'long', 'short')
     except Exception as e:
         print(f"Error in calculating returns: {e}")
 

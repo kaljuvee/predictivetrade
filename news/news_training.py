@@ -28,7 +28,7 @@ def train_and_save_model_for_topic(topic, df):
         # Feature extraction using TF-IDF
         tfidf = TfidfVectorizer(max_features=1000)
         X = tfidf.fit_transform(topic_df['features'])
-        y = topic_df['action']
+        y = topic_df['actual_action']
 
         # Splitting the dataset into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
