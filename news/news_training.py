@@ -82,7 +82,7 @@ def process_results(results, df):
         results_df = results_df.sort_values(by='accuracy', ascending=False)
         results_df.fillna(0, inplace=True)
         # Save the results DataFrame to a file
-        results_df.to_csv('model_results.csv', index=False)
+        results_df.to_csv('models/model_results.csv', index=False)
         print('successfully wrote results to file: ', results_df)
         # Get the current time in seconds since the Epoch
         current_time_seconds = time.time()

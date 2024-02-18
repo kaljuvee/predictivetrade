@@ -166,7 +166,7 @@ def read_news_price():
     sql_query = '''
     SELECT distinct ticker, title, link, topic, published_est, market,
        begin_price, end_price, index_begin_price, index_end_price,
-       daily_return, index_return, daily_alpha, actual_action
+       daily_return, index_return, daily_alpha, actual_action, predicted_action, confidence
     FROM news_price
     ORDER BY published_est DESC
     '''
