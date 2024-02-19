@@ -9,6 +9,44 @@ st.title("Equities Event Analytics")
 
 st.subheader('Event Prediction Accuracy Levels by Event Type')
 
+import pandas as pd
+import plotly.figure_factory as ff
+from sklearn.metrics import confusion_matrix
+
+def get_confusion_matrix(data, actual_col, predicted_col):
+    """
+    Generates a 2x2 confusion matrix plot for the given DataFrame.
+
+    Parameters:
+    - data: pd.DataFrame containing the dataset.
+    - actual_col: str, the name of the column with actual values.
+    - predicted_col: str, the name of the column with predicted values.
+
+    Returns:
+    - A Plotly figure object representing the 2x2 confusion matrix.
+    """
+    # Remove rows where actual or predicted values are null
+    cleaned_data = data.dropna(subset=[actual_col, predicted_col])
+
+    # Determine the top 2 categories in actual and predicted columns
+    top_actual_actions = cleaned_data[actual_col].value_counts().nlargest(2).index
+    top_predicted_actions = cleaned_data[predicted_col].value_counts().nlargest(2).index
+
+    # Filter data to include only the top 2 categories from both actual and predicted columns
+    filtered_data = cleaned_data[(cleaned_data[actual_col].isin(top_actual_actions)) & (cleaned_data[predicted_col].isin(top_predicted_actions))]
+
+    # Calculate the 2x2 confusion matrix
+    cm_2x2 = confusion_matrix(filtered_data[actual_col], filtered_data[predicted_col], labels=top_actual_actions)
+
+    # Create a Plotly figure for the 2x2 confusion matrix
+    fig_2x2 = ff.create_annotated_heatmap(z=cm_2x2, x=list(top_predicted_actions), y=list(top_actual_actions), colorscale='Blues', annotation_text=cm_2x2)
+
+    # Update layout
+    fig_2x2.update_layout(xaxis=dict(title='Predicted Actions'),
+                          yaxis=dict(title='Actual Actions'))
+
+    return fig_2x2
+
 def get_alpha_std(df):
     # Assuming 'subject' and 'daily_alpha' are columns in your DataFrame
     alpha_stdev_df = df.groupby('topic')['daily_alpha'].std().reset_index()
@@ -76,5 +114,10 @@ st.plotly_chart(fig)
 st.subheader('Standard Deviation of Outperformance (Alpha) by Event Type')
 
 fig = get_alpha_std(prediction_df)
+st.plotly_chart(fig)
+
+st.subheader('Confusion Matrix for Actual vs. Predicted Actions')
+
+fig = get_confusion_matrix(prediction_df, 'actual_action', 'predicted_action')
 st.plotly_chart(fig)
 

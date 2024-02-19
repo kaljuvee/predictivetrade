@@ -1,0 +1,1 @@
+python simple_market_maker.py -e bitstamp -s 'ETH/USD' -a 0.01 -sm 'one-sided' -m 'paper' -p 10000
