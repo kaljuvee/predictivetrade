@@ -9,7 +9,6 @@ scipy
 argparse
 vectorbt
 feedparser
-pandas
 beautifulsoup4
 lxml
 PyYAML
@@ -23,3 +22,4 @@ joblib
 alpaca-trade-api
 statsmodels
 reportlab
+st_pages
