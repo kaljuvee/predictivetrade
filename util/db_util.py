@@ -26,6 +26,8 @@ db_params = {
 }
 # postgres://pddeswvh:uRN_JtBBpy6BAHTgkAiZKKNW05LB_U_z@trumpet.db.elephantsql.com/pddeswvh
 
+engine = create_engine(f"postgresql+psycopg2://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['dbname']}")
+
 def get_news_prediction():
     # Define the SQL query
     sql_query = '''
