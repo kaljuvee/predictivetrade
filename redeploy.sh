@@ -12,6 +12,10 @@ pip install -r requirements.txt
 echo "Pulling latest changes from Git..."
 git pull
 
+# Stop existing Streamlit app
+echo "Stopping Streamlit app..."
+pkill streamlit
+
 # Start Streamlit app
 echo "Starting Streamlit app..."
 streamlit run Home.py&
