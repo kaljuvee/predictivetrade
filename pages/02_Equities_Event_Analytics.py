@@ -13,6 +13,27 @@ import pandas as pd
 import plotly.figure_factory as ff
 from sklearn.metrics import confusion_matrix
 
+def display_frequency(df, hour_column):
+    """
+    Displays a frequency chart for the given DataFrame and hour column.
+
+    Parameters:
+    - df: DataFrame containing the data
+    - hour_column: String name of the column representing the hour of day
+    """
+    # Create a frequency count of occurrences per specified hour column
+    hourly_counts = df[hour_column].value_counts().reset_index()
+    hourly_counts.columns = [hour_column, 'counts']
+
+    # Create the frequency chart using Plotly
+    fig = px.bar(hourly_counts, x=hour_column, y='counts',
+                 labels={hour_column: 'Hour of Day', 'counts': 'Counts'},
+                 title='Frequency Chart by Hour of Day',
+                 template="plotly_white")  # Using a white background for better readability
+
+    # Show the figure
+    return fig
+
 def get_confusion_matrix(data, actual_col, predicted_col):
     """
     Generates a 2x2 confusion matrix plot for the given DataFrame.
@@ -119,5 +140,10 @@ st.plotly_chart(fig)
 st.subheader('Confusion Matrix for Actual vs. Predicted Actions')
 
 fig = get_confusion_matrix(prediction_df, 'actual_action', 'predicted_action')
+st.plotly_chart(fig)
+
+st.subheader('Event Frequency by Hour of Day')
+news_df = db_util.get_news_all()
+fig = display_frequency(news_df, 'hour_of_day')
 st.plotly_chart(fig)
 

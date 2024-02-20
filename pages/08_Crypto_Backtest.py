@@ -88,9 +88,9 @@ selected_timeframe = st.selectbox("Select Timeframe", ["1m", "5m", "15m", "30m",
 
 # Button to calculate bid and ask
 if st.button('Get Bid Ask Prices'):
-    if not st.session_state.data.empty:
-        #bid_ask_df = db_util.get_prices(st.session_state.exchange)
-        bid_ask_df = db_util.get_bid_ask(st.session_state.exchange, st.session_state.symbols)
+    if not st.session_state.data is not None:
+        bid_ask_df = db_util.get_prices(st.session_state.exchange, st.session_state.symbols, selected_timeframe, selected_days)
+        #bid_ask_df = db_util.get_bid_ask(st.session_state.exchange, st.session_state.symbols)
         st.session_state.bid_ask = bid_ask_df
         st.write('Exchange: ', st.session_state.exchange)
         st.write('Bid-Ask data dimensions (rows, columns): ', st.session_state.bid_ask.shape)
