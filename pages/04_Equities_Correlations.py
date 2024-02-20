@@ -45,7 +45,7 @@ selected_exchange = st.selectbox("Select sector:", sector_options)
 available_symbols = exchange_util.biotech_symbols
 st.write(f'All available symbols in {selected_exchange}: ', available_symbols)
 
-default_symbols = ['IBB', 'XBI', 'FBT', 'BBH', 'ARKG']
+default_symbols = ['XBI', 'IBB', 'FBT', 'BBH', 'ARKG']
 
 if available_symbols:
     selected_symbols = st.multiselect("Select symbols to download", available_symbols, default = default_symbols)
@@ -53,7 +53,7 @@ if available_symbols:
 else:
     st.error(f"Failed to load symbols")
 
-selected_benchmark = st.selectbox("Select ETF benchmark::", ['IBB', 'XBI', 'FBT', 'BBH', 'ARKG'])
+selected_benchmark = st.selectbox("Select ETF benchmark::", ['XBI', 'IBB', 'FBT', 'BBH', 'ARKG'])
 selected_interval = st.selectbox("Select tick interval:", ["1m", "5m", "15m", "30m", "1h", "6h", "12h", "1d", "1w"])
 selected_timeframe = st.slider("Select lookback window: (days)", min_value=1, max_value=30, value=1, step=1)
 
