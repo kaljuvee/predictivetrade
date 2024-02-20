@@ -56,12 +56,13 @@ stop_loss_options = [0.5, 1.0, 1.5, 2.0]
 profit_options = [0.5, 1.0, 1.5, 2.0, 2.5]
 
 selected_exchange = st.selectbox("Select Exchange:", exchange_options)
+st.session_state.exchange = selected_exchange
 selected_assets = st.selectbox("Number of initial assets:", asset_options)
 selected_position = st.selectbox("Select position size (USD) for backtest:", position_options)
 selected_treshold = st.selectbox("Select backtest z-score treshold for the **entry signal**:", treshold_options)
 
 # Use st.number_input for stop loss and profit limit
-selected_stop = st.number_input("Select stop loss limit (%) for backtest **exit signal**:", min_value=0.0, max_value=100.0, value=1.0, step=0.1, format="%.2f")
+selected_stop = st.number_input("Select stop loss limit (%) for backtest **exit signal**:", min_value=0.0, max_value=100.0, value=0.5, step=0.1, format="%.2f")
 selected_profit = st.number_input("Select profit limit (%) for backtest **exit signal**:", min_value=0.0, max_value=100.0, value=1.0, step=0.1, format="%.2f")
 bid_ask_spread = st.number_input("Bid-Ask Spread (as %)", min_value=0.01, max_value=1.0, value=0.1, step=0.01)
 maker_fee = st.number_input("Maker fee (as %)", min_value=0.01, max_value=1.0, value=0.1, step=0.01)
@@ -87,14 +88,16 @@ else:
 selected_timeframe = st.selectbox("Select Timeframe", ["1m", "5m", "15m", "30m", "1h", "6h", "12h", "1d", "1w"])
 
 # Button to calculate bid and ask
-if st.button('Get Bid Ask Prices'):
+if st.button('Get Prices'):
     if not st.session_state.data is not None:
-        bid_ask_df = db_util.get_prices(st.session_state.exchange, st.session_state.symbols, selected_timeframe, selected_days)
+        bid_ask_df = exchange_util.get_prices(selected_exchange, selected_symbols, selected_timeframe, selected_days)
         #bid_ask_df = db_util.get_bid_ask(st.session_state.exchange, st.session_state.symbols)
         st.session_state.bid_ask = bid_ask_df
+        st.session_state.exchange = selected_exchange
+        st.session_state.symbols = selected_symbols
         st.write('Exchange: ', st.session_state.exchange)
-        st.write('Bid-Ask data dimensions (rows, columns): ', st.session_state.bid_ask.shape)
-        st.write('Bid-Ask Data:', st.session_state.bid_ask)
+        st.write('Bid-Ask data dimensions (rows, columns): ', bid_ask_df.shape)
+        st.write('Bid-Ask Data:', bid_ask_df)
         #pivot = bid_ask_df.pivot_table(index='timestamp', columns='symbol', values=['close', 'bid', 'ask'])
         #st.write('Pivoted Bid-Ask Data:', pivot)
     else:
@@ -104,6 +107,8 @@ if st.button('Get Bid Ask Prices'):
 if st.button('Backtest') and st.session_state.bid_ask is not None:
     # Choose the backtesting function based on the selected strategy
     run_id = backtest_util.get_run_id()
+    pairs = backtest_util.get_pairs(st.session_state.symbols)
+    st.session_state.pairs = pairs
     if selected_strategy == "One-sided":
         pnl = backtest_util.backtest_zscores_one_sided_bid_ask(
             st.session_state.bid_ask, st.session_state.pairs,
