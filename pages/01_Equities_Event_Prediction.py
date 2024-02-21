@@ -23,20 +23,12 @@ def format_colours(df):
     
     return styled_df
 
-def update_confidence(news_price_df, model_results_df):
-    # Merge the DataFrames on the 'topic' column to match accuracy values
-    merged_df = news_price_df.merge(model_results_df[['topic', 'accuracy']], on='topic', how='left')
-    # Update the 'confidence' column in the original news_price_df with the matched accuracy values
-    news_price_df['confidence'] = merged_df['accuracy']
-    return news_price_df
 
 def get_news():
     try:
         # Fetch news data using db_util
         news_df = db_util.get_news_prediction()
-        news_df['topic'] = news_df['topic'].str.lower().str.replace(" ", "_").str.replace("/", "_").str.replace("&", "").str.replace("'", "")
-        model_df = pd.read_csv('news/models/model_results.csv')
-        update_confidence(news_df, model_df)
+        
         # Format the 'ticker' column with hyperlinks
         news_df['ticker'] = '<a href="https://www.marketwatch.com/investing/stock/' + news_df['ticker'] + '" target="_blank">' + news_df['ticker'] + '</a>'
         

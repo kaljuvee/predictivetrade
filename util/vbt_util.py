@@ -44,11 +44,7 @@ def convert_frequency(freq):
         return f'{minutes}T'  # Convert to pandas frequency format
     return freq  # Return the original frequency if no match
 
-from datetime import datetime, timedelta
-import vectorbt as vbt
-import logging
-
-def get_equities_data(asset1, asset2, input_frequency, lookback_days):
+def backtest_zscore(asset1, asset2, window, threshold, position_size, stop_loss_pct, take_profit_pct, input_frequency, lookback_days):
     try:
         # Convert the input frequency to the desired format
         frequency = convert_frequency(input_frequency)
@@ -58,21 +54,8 @@ def get_equities_data(asset1, asset2, input_frequency, lookback_days):
         start_date = end_date - timedelta(days=lookback_days)
 
         # Fetch historical price data with the specified frequency
-        asset1_data = vbt.YFData.download(asset1, start=start_date, end=end_date, interval=frequency).get('Close')
-        asset2_data = vbt.YFData.download(asset2, start=start_date, end=end_date, interval=frequency).get('Close')
-
-    except Exception as e:
-        # Log the error
-        logging.error(f"Error fetching data for {asset1} or {asset2}: {e}")
-
-        # You can choose to return None or an empty DataFrame, or raise a custom error
-        # Here, we choose to return None to indicate failure
-        asset1_data, asset2_data = None, None
-
-    return asset1_data, asset2_data
-
-def backtest_zscore(asset1_data, asset2_data, window, threshold, position_size, stop_loss_pct, take_profit_pct):
-    try:
+        asset1_data = vbt.YFData.download(asset1, start=start_date, end=end_date, interval=input_frequency).get('Close')
+        asset2_data = vbt.YFData.download(asset2, start=start_date, end=end_date, interval=input_frequency).get('Close')
 
         # Align the data based on timestamps
         asset1_data_aligned, asset2_data_aligned = asset1_data.align(asset2_data, join='inner')
