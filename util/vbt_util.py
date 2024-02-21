@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 import numpy as np
 import re
 import numpy as np
-
+import streamlit as st
+import yfinance as yf
 def simulate_trades(entries, prices, stop_loss_pct, take_profit_pct):
     try:
         sl_exits = np.full_like(entries, False)
@@ -96,13 +97,13 @@ def backtest_zscore(asset1, asset2, window, threshold, position_size, stop_loss_
 def benchmark_returns(portfolio, benchmark_ticker='SPY'):
     # Call the returns method to get the returns DataFrame
     portfolio_returns_df = portfolio.returns()
-
     # Obtain the start and end dates from the portfolio's returns DataFrame index
     start_date = portfolio_returns_df.index[0]
     end_date = portfolio_returns_df.index[-1]
 
     # Fetch benchmark data for the same date range as your backtest
-    benchmark_data = vbt.YFData.download(benchmark_ticker, start=start_date, end=end_date, interval='1d').get('Close')
+    benchmark_data = yf.download(benchmark_ticker, start=start_date, end=end_date, interval='1d')['Close']
+
 
     # Calculate daily returns for the benchmark
     benchmark_returns = benchmark_data.vbt.pct_change()

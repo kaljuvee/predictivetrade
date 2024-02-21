@@ -7,6 +7,20 @@ import numpy as np
 import plotly.express as px
 from util import exchange_util, plot_util
 from scipy.stats import zscore
+import time
+import itertools
+
+def get_run_id():
+    return int(round(time.time() * 1000))
+
+def get_pairs(crypto_symbols):
+    # Generate all permutations of the crypto symbols
+    symbol_permutations = itertools.permutations(crypto_symbols, 2)
+    # Create a list of dictionaries for the pairs
+    pairs = [{'Asset1': symbol1, 'Asset2': symbol2} for symbol1, symbol2 in symbol_permutations]
+    # Convert the list of dictionaries to a DataFrame
+    pairs_df = pd.DataFrame(pairs)
+    return pairs_df  # Return as a DataFrame
 
 # Calculate z-score
 def zscore(series):
@@ -148,97 +162,69 @@ def get_merge_key(timestamp_series):
     # Rounds the given timestamp Series to the nearest minute
     return timestamp_series.dt.floor('T')
 
-def backtest_zscores_one_sided_bid_ask(prices, sorted_pairs, threshold, position_size, stop_loss_limit, profit_limit, maker_fee=0.1):
-    signals_list = []
-    positions = {}
-    global_gross_cum_pnl = 0  # Initialize gross cumulative PnL as a global variable
-    global_net_cum_pnl = 0  # Initialize net cumulative PnL as a global variable
+def backtest_zscores_one_sided_bid_ask(prices, sorted_pairs, threshold, position_size, 
+                                       stop_loss_limit, profit_limit, exchange, run_id, maker_fee=0.1, reinvest=True):
+    pnl_list = []
+    global_gross_cum_pnl = 0
+    global_net_cum_pnl = 0
+    initial_position_size = position_size
     
-    # Adjust limits and fees to decimal form
     stop_loss_limit /= 100
     profit_limit /= 100
+    maker_fee  = int(maker_fee)
     maker_fee /= 100
-    
+
+    try:
+        positions = initialize_positions(sorted_pairs)
+    except Exception as e:
+        print(f"Error initializing positions: {e}")
+        return
+
     for index, row in sorted_pairs.iterrows():
         asset1, asset2 = row['Asset1'], row['Asset2']
         symbol_pair = f"{asset1}-{asset2}"
         
-        if symbol_pair not in positions:
-            positions[symbol_pair] = {'open': False, 'entry_price': 0, 'lots': 0}
+        adjusted_position_size = position_size / len(sorted_pairs) if len(sorted_pairs) > 0 else 0
 
         try:
-            # Filter prices for each asset and create a merge key
-            prices_asset1 = prices[prices['symbol'] == asset1].copy()
-            prices_asset2 = prices[prices['symbol'] == asset2].copy()
-            prices_asset1['merge_key'] = get_merge_key(prices_asset1['timestamp'])
-            prices_asset2['merge_key'] = get_merge_key(prices_asset2['timestamp'])
-
-            # Perform an inner join on the merge key to ensure matching rows
-            merged_prices = pd.merge(prices_asset1, prices_asset2, on='merge_key', suffixes=('_asset1', '_asset2'), how='inner')
-
-            if not merged_prices.empty:
-                # Calculate price ratios using aligned data from the merged DataFrame
-                price_ratios = merged_prices['close_asset1'] / merged_prices['close_asset2']
-                z_scores = zscore(price_ratios)
-
-                for i, z_score in enumerate(z_scores):
-                    timestamp = merged_prices.iloc[i]['timestamp_asset1']  # Use the timestamp from asset1
-                    position = positions[symbol_pair]
-
-                    if not position['open'] and z_score < -threshold:
-                        entry_ask_price = merged_prices.iloc[i]['ask_asset1']
-                        if entry_ask_price > 0:
-                            position['open'] = True
-                            position['entry_price'] = entry_ask_price
-                            position['lots'] = position_size / entry_ask_price
-                            signals_list.append({
-                                'Pair': symbol_pair, 'Timestamp': timestamp, 'Action': 'Open Position',
-                                'Z-Score': z_score, 'Strategy': 'One-sided', 'Price': entry_ask_price, 'Lots': position['lots'], 'Gross PnL': '', 'Net PnL': '',
-                                'Cumulative Gross PnL': global_gross_cum_pnl, 'Cumulative Net PnL': global_net_cum_pnl
-                            })
-
-                    elif position['open']:
-                        exit_bid_price = merged_prices.iloc[i]['bid_asset1']
-                        change_percentage = (exit_bid_price - position['entry_price']) / position['entry_price']
-                        if change_percentage <= -stop_loss_limit or change_percentage >= profit_limit:
-                            position['open'] = False
-                            gross_pnl = position['lots'] * (exit_bid_price - position['entry_price'])
-                            net_pnl = gross_pnl - maker_fee * position_size
-                            global_gross_cum_pnl += gross_pnl
-                            global_net_cum_pnl += net_pnl
-                            action = 'Closed with Stop Loss' if change_percentage <= -stop_loss_limit else 'Closed with Profit'
-                            signals_list.append({
-                                'Pair': symbol_pair, 'Timestamp': timestamp, 'Action': action,
-                                'Z-Score': z_score, 'Strategy': 'One-sided', 'Price': exit_bid_price, 'Gross PnL': gross_pnl, 'Net PnL': net_pnl,
-                                'Cumulative Gross PnL': global_gross_cum_pnl, 'Cumulative Net PnL': global_net_cum_pnl
-                            })
-            else:
-                print(f"No matching timestamps found for pair {symbol_pair}")
+            merged_prices, z_scores = merge_and_calculate_ratios(prices, asset1, asset2)
         except Exception as e:
-            print(f"Error processing {symbol_pair}: {e}")
-    return pd.DataFrame(signals_list)
+            print(f"Error merging prices and calculating ratios for {symbol_pair}: {e}")
+            continue
 
-def get_correlation_pairs(returns):
-    # Compute the correlation matrix
-    correlation_matrix = returns.corr()
+        for i, z_score in enumerate(z_scores):
+            timestamp = merged_prices.iloc[i]['timestamp_asset1']
+            position = positions[symbol_pair]
 
-    # Flatten the correlation matrix and reset index
-    corr_pairs = correlation_matrix.unstack().reset_index()
+            try:
+                if not position['open'] and z_score < -threshold:
+                    entry_ask_price = merged_prices.iloc[i]['ask_asset1']
+                    open_position(position, pnl_list, symbol_pair, timestamp, z_score, entry_ask_price, 
+                                  adjusted_position_size, global_gross_cum_pnl, global_net_cum_pnl, exchange, run_id)
 
-    # Rename columns for clarity
-    corr_pairs.columns = ['Asset1', 'Asset2', 'Correlation']
+                elif position['open']:
+                    exit_bid_price = merged_prices.iloc[i]['bid_asset1']
+                    change_percentage = (exit_bid_price - position['entry_price']) / position['entry_price']
+                    action = 'Closed with Stop Loss' if change_percentage <= -stop_loss_limit else 'Closed with Profit'
+                    if change_percentage <= -stop_loss_limit or change_percentage >= profit_limit:
+                        global_gross_cum_pnl, global_net_cum_pnl, adjusted_position_size = close_position(
+                            position, pnl_list, symbol_pair, timestamp, z_score, exit_bid_price, maker_fee, adjusted_position_size, 
+                            global_gross_cum_pnl, global_net_cum_pnl, action, reinvest, exchange, run_id
+                        )
+            except Exception as e:
+                print(f"Error processing position for {symbol_pair} at timestamp {timestamp}: {e}")
 
-    # Remove self-correlation
-    corr_pairs = corr_pairs[corr_pairs['Asset1'] != corr_pairs['Asset2']]
+    # Update the position size for the next iteration if reinvesting
+    if reinvest:
+        position_size = initial_position_size + global_net_cum_pnl
 
-    # Filter out duplicate pairs by ensuring Asset1 < Asset2
-    corr_pairs = corr_pairs[corr_pairs['Asset1'] < corr_pairs['Asset2']]
-
-    # Sort by absolute correlation values
-    corr_pairs['Absolute Correlation'] = corr_pairs['Correlation'].abs()
-    sorted_pairs = corr_pairs.sort_values(by='Absolute Correlation', ascending=False)
-
-    return sorted_pairs[['Asset1', 'Asset2', 'Correlation']]
+    try:
+        pnl_df = pd.DataFrame(pnl_list)
+        pnl_df['gross_pnl'] = pd.to_numeric(pnl_df['gross_pnl'], errors='coerce').fillna(0)
+    except Exception as e:
+        print(f"Error creating PnL DataFrame: {e}")
+        return
+    return pnl_df
 
 def calculate_returns(all_data):
     # Convert columns to numeric types (excluding 'timestamp' and 'symbol')
