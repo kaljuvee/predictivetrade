@@ -5,7 +5,7 @@ import ccxt
 from plotly.subplots import make_subplots
 import numpy as np
 import plotly.express as px
-from util import exchange_util, plot_util, backtest_util, db_util
+from util import exchange_util, plot_util, backtest_util, db_util,vbt_util
 
 title = "Crypto Backtest"
 st.set_page_config(page_title=title)
@@ -30,7 +30,7 @@ def get_default_symbols(selected_exchange):
     else:
         # Handle the case where fetching available symbols failed
         st.error(f"Failed to load symbols from {selected_exchange}: {error_message}")
-        valid_stored_symbols = []
+        valid_available_symbols = []
     return valid_available_symbols, all_symbols, error_message
     
 # Initialize session state variables
@@ -86,9 +86,11 @@ else:
     st.error(f"Failed to load symbols from {selected_exchange}: {error_message}")
 
 selected_timeframe = st.selectbox("Select Timeframe", ["1m", "5m", "15m", "30m", "1h", "6h", "12h", "1d", "1w"])
-
-# Button to calculate bid and ask
-if st.button('Get Prices'):
+selected_bt_engine = st.selectbox("Select backtesting engine:",  ["vectorbt","custom"])
+selected_lookback = st.slider("Select lookback window: (days)", min_value=1, max_value=30, value=1, step=1)
+      
+# Download data button
+if st.button('Plot Prices'):
     if not st.session_state.data is not None:
         bid_ask_df = exchange_util.get_prices(selected_exchange, selected_symbols, selected_timeframe, selected_days)
         #bid_ask_df = db_util.get_bid_ask(st.session_state.exchange, st.session_state.symbols)
@@ -101,34 +103,75 @@ if st.button('Get Prices'):
         #pivot = bid_ask_df.pivot_table(index='timestamp', columns='symbol', values=['close', 'bid', 'ask'])
         #st.write('Pivoted Bid-Ask Data:', pivot)
     else:
-        st.error("No price data available. Please download price data first.")
-        
+        st.warning("Please select at least one symbol and a timeframe.")
+
+
 # Backtest button
-if st.button('Backtest') and st.session_state.bid_ask is not None:
+if st.button('Backtest')and st.session_state.bid_ask is not None:
     # Choose the backtesting function based on the selected strategy
     run_id = backtest_util.get_run_id()
     pairs = backtest_util.get_pairs(st.session_state.symbols)
     st.session_state.pairs = pairs
-    if selected_strategy == "One-sided":
-        pnl = backtest_util.backtest_zscores_one_sided_bid_ask(
-            st.session_state.bid_ask, st.session_state.pairs,
-            selected_treshold, selected_position, selected_stop, selected_profit, st.session_state.exchange, run_id, maker_fee, reinvest_profits)
-        st.session_state.pnl = pnl     
-    elif selected_strategy == "Two-sided":
-        pnl = backtest_util.backtest_zscores_one_sided_bid_ask(
-            st.session_state.bid_ask, st.session_state.pairs,
-            selected_treshold, selected_position, selected_stop, selected_profit, st.session_state.exchange, run_id, maker_fee, reinvest_profits)
-        st.session_state.pnl = pnl  
-    else:
-        st.error("Invalid strategy selected.")
-        signals = None
+    #select box with: 'Select backtesting engine: [vectorbt, custom] with vectorbt as default
+    
+    if selected_bt_engine == 'vectorbt':
+        asset1 = selected_symbols[0]
+        asset2 = selected_symbols[1]
+        # Display the backtest signals, if any
+        position_size = selected_position
+        window = 30
+        threshold = selected_treshold
+        stop_loss_pct = selected_stop
+        take_profit_pct = selected_profit
+        input_frequency = selected_timeframe
+        lookback_days = selected_lookback
+        portfolio = vbt_util.backtest_zscore(asset1, asset2, window, threshold, position_size,
+                        stop_loss_pct, take_profit_pct, input_frequency, lookback_days)
+        if portfolio is not None:
+            st.subheader("Backest Summary")
+            st.write(portfolio.stats())
+            # Extract trades from the portfolio
+            trades = portfolio.trades
+            # Convert the trades to a DataFrame
+            trades_df = trades.records_readable
+            trades_df.columns = trades_df.columns.map(lambda x: x.lower().replace(' ', '_'))
+            trades_df.rename(columns={'column': 'action'}, inplace=True)
+            st.session_state.trades = trades_df
+            st.subheader("Trade Detail")
+            st.write(trades_df)
+            st.subheader("Returns Relative to the Market Benchmark (SPY)")
+            cumulative_portfolio_returns, cumulative_benchmark_returns = vbt_util.benchmark_returns(portfolio, benchmark_ticker='SPY')
+            st.write('Cumulative backtest returns:', cumulative_portfolio_returns)
+            st.write('Cumulative SPY returns:', cumulative_benchmark_returns)
+            st.subheader("Equity Line vs Market Benchmark (SPY)")
+            fig = plot_util.plot_benchmark_returns(cumulative_portfolio_returns, cumulative_benchmark_returns, benchmark_ticker='SPY')
+            st.plotly_chart(fig)
+        else:
+            st.write("No PnL generated. Please check your input parameters and strategy selection.")
 
-    # Display the backtest signals, if any
-    if pnl is not None:
-        st.write('Backtest PnL: ', pnl)
-        # plot_util.plot_equity_line(pnl)
-    else:
-        st.write("No PnL generated. Please check your input parameters and strategy selection.")
+    
+    elif selected_bt_engine == 'custom':
+        
+        if selected_strategy == "One-sided":
+            pnl = backtest_util.backtest_zscores_one_sided_bid_ask(
+                st.session_state.bid_ask, st.session_state.pairs,
+                selected_treshold, selected_position, selected_stop, selected_profit, st.session_state.exchange, run_id, maker_fee, reinvest_profits)
+            st.session_state.pnl = pnl     
+        elif selected_strategy == "Two-sided":
+            pnl = backtest_util.backtest_zscores_one_sided_bid_ask(
+                st.session_state.bid_ask, st.session_state.pairs,
+                selected_treshold, selected_position, selected_stop, selected_profit, st.session_state.exchange, run_id, maker_fee, reinvest_profits)
+            st.session_state.pnl = pnl  
+        else:
+            st.error("Invalid strategy selected.")
+            signals = None
+
+        # Display the backtest signals, if any
+        if pnl is not None:
+            st.write('Backtest PnL: ', pnl)
+            # plot_util.plot_equity_line(pnl)
+        else:
+            st.write("No PnL generated. Please check your input parameters and strategy selection.")
 
 # Backtest button
 if st.button('Store PnL') and st.session_state.pnl is not None:
