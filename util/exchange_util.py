@@ -8,8 +8,9 @@ from datetime import datetime, timedelta
 # Usage
 yaml_file_path = 'config/biotech.yaml'
 
-biotech_symbols = ['IBB', 'XBI', 'FBT', 'BBH', 'ARKG', 'FBIO', 'KA', 'QGEN', 'DYAI', 'JSPR', 'ANAB', 'ECOR', 'ELOX', 'MDWD', 'RAD.AX', 'EYEN', 'PYPD', 'SCLX', 'TALS', 'SNCE', 'ORIC', 'TTOO', 'ADXN', 'SPRY', 'IMNN', 'ADTX', 'OCUP', 'ARQT', 'IMCR', 'ORPHA.CO', 'VIR', 'DBVT', 'ICCC', 'ONCT', 'ALVO', 'EVAX', 'CHRS', 'MYNZ', 'SCPH', 'MDAI', 'BIOR', 'MLYS', 'LGVN', 'BMRA', 'KRON', 'CDTX', 'NTLA', 'TLSA', 'PCIB.OL', 'SANN.SW', 'IMRX', 'OPGN', 'TGTX', 'VBLT', 'ANVS', 'ADAG', 'INAB', 'PCRX', 'BCAB', 'WINT', 'KBLB', 'PEPG', 'NSPR', 'NZYM-B.CO', 'MYCO.CN', 'NANO.PA', 'CERT', 'AKYA', 'ALERS.PA', 'VALN', 'MLTX', 'RENB', 'RVVTF', 'YTEN', 'RZLT', 'ELTX', 'NKGN', 'FARON.HE', 'CCCC', 'BCDA', 'MNOV', 'OXUR.BR', 'CAPR', 'OVID', 'TSHA', 'BTAI', 'AKRO', 'OCGN', 'CNTG', 'OCS', 'ANNX', 'MYCOF', 'HARP', 'MDXH', 'VXRT', 'IMMX', 'GTHX', 'INMB', 'HUMA', 'PHIL.MI', 'IOVA', 'CRSP', 'TOVX', 'EDIT', 'RAIN', 'CFRX', 'PCVX', 'RNAZ', 'NOTV', 'CRBP', 'IMMP', 'ENTX', 'BNOX', 'MDG1.DE', 'BNTX', 'NEXI', 'CADL', 'CELU', 'RAPT', 'CKPT', 'XFOR', 'BXRX', 'CBAY', 'PHGE', 'HOOK', 'BIOS.BR', 'XXII', 'CDMO', 'NXTC', 'ETNB', 
-                'NKTX', 'GLUE', 'EVLO', 'ACIU', 'GMAB', 'PLRX', 'STRO', 'SWAV', 'SEER', 'AEON', 'CTKB', 'GRFS', 'AMRN', 'BIIB', 'BIVI', 'CTMX', 'SGMT', 'BICX', 'STTK', 'XBIT', 'VINC', 'APTO', 'FGEN', 'GLPG', 'TCRX', 'ADPT', 'SWTX']
+#biotech_symbols = ['IBB', 'XBI', 'FBT', 'BBH', 'ARKG', 'FBIO', 'KA', 'QGEN', 'DYAI', 'JSPR', 'ANAB', 'ECOR', 'ELOX', 'MDWD', 'RAD.AX', 'EYEN', 'PYPD', 'SCLX', 'TALS', 'SNCE', 'ORIC', 'TTOO', 'ADXN', 'SPRY', 'IMNN', 'ADTX', 'OCUP', 'ARQT', 'IMCR', 'ORPHA.CO', 'VIR', 'DBVT', 'ICCC', 'ONCT', 'ALVO', 'EVAX', 'CHRS', 'MYNZ', 'SCPH', 'MDAI', 'BIOR', 'MLYS', 'LGVN', 'BMRA', 'KRON', 'CDTX', 'NTLA', 'TLSA', 'PCIB.OL', 'SANN.SW', 'IMRX', 'OPGN', 'TGTX', 'VBLT', 'ANVS', 'ADAG', 'INAB', 'PCRX', 'BCAB', 'WINT', 'KBLB', 'PEPG', 'NSPR', 'NZYM-B.CO', 'MYCO.CN', 'NANO.PA', 'CERT', 'AKYA', 'ALERS.PA', 'VALN', 'MLTX', 'RENB', 'RVVTF', 'YTEN', 'RZLT', 'ELTX', 'NKGN', 'FARON.HE', 'CCCC', 'BCDA', 'MNOV', 'OXUR.BR', 'CAPR', 'OVID', 'TSHA', 'BTAI', 'AKRO', 'OCGN', 'CNTG', 'OCS', 'ANNX', 'MYCOF', 'HARP', 'MDXH', 'VXRT', 'IMMX', 'GTHX', 'INMB', 'HUMA', 'PHIL.MI', 'IOVA', 'CRSP', 'TOVX', 'EDIT', 'RAIN', 'CFRX', 'PCVX', 'RNAZ', 'NOTV', 'CRBP', 'IMMP', 'ENTX', 'BNOX', 'MDG1.DE', 'BNTX', 'NEXI', 'CADL', 'CELU', 'RAPT', 'CKPT', 'XFOR', 'BXRX', 'CBAY', 'PHGE', 'HOOK', 'BIOS.BR', 'XXII', 'CDMO', 'NXTC', 'ETNB', 
+#               'NKTX', 'GLUE', 'EVLO', 'ACIU', 'GMAB', 'PLRX', 'STRO', 'SWAV', 'SEER', 'AEON', 'CTKB', 'GRFS', 'AMRN', 'BIIB', 'BIVI', 'CTMX', 'SGMT', 'BICX', 'STTK', 'XBIT', 'VINC', 'APTO', 'FGEN', 'GLPG', 'TCRX', 'ADPT', 'SWTX']
+
 def get_biotech_symbols():
     try:
         # Open and read the YAML file
@@ -23,6 +24,8 @@ def get_biotech_symbols():
     except Exception as e:
         print(f"Error reading YAML file: {e}")
         return []
+    
+biotech_symbols=get_biotech_symbols()
 
 def get_prices_yfinance(selected_symbols, interval='1d', days=30):
     try:
