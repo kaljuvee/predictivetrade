@@ -1,8 +1,7 @@
 
 # Activate virtual environment if applicable
 echo "Activate virtual environment..."
-#source venv/Scripts/activate
-source venv/bin/activate
+source venv/Scripts/activate
 
 # Install or update dependencies
 echo "Installing/updating dependencies..."
