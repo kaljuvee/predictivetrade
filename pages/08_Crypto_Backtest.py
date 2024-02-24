@@ -153,4 +153,3 @@ if st.button('Get Pairs') and st.session_state.data is not None:
 if st.button('Show Available Symbols'):
     st.write('Top symbols by volume: ', top_coins)
     st.write('All available symbols: ', available_symbols)
-

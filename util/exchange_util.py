@@ -4,14 +4,12 @@ import math
 import yfinance as yf
 import yaml
 from datetime import datetime, timedelta
-import streamlit as st
 
 # Usage
 yaml_file_path = 'config/biotech.yaml'
 
 biotech_symbols = ['IBB', 'XBI', 'FBT', 'BBH', 'ARKG', 'FBIO', 'KA', 'QGEN', 'DYAI', 'JSPR', 'ANAB', 'ECOR', 'ELOX', 'MDWD', 'RAD.AX', 'EYEN', 'PYPD', 'SCLX', 'TALS', 'SNCE', 'ORIC', 'TTOO', 'ADXN', 'SPRY', 'IMNN', 'ADTX', 'OCUP', 'ARQT', 'IMCR', 'ORPHA.CO', 'VIR', 'DBVT', 'ICCC', 'ONCT', 'ALVO', 'EVAX', 'CHRS', 'MYNZ', 'SCPH', 'MDAI', 'BIOR', 'MLYS', 'LGVN', 'BMRA', 'KRON', 'CDTX', 'NTLA', 'TLSA', 'PCIB.OL', 'SANN.SW', 'IMRX', 'OPGN', 'TGTX', 'VBLT', 'ANVS', 'ADAG', 'INAB', 'PCRX', 'BCAB', 'WINT', 'KBLB', 'PEPG', 'NSPR', 'NZYM-B.CO', 'MYCO.CN', 'NANO.PA', 'CERT', 'AKYA', 'ALERS.PA', 'VALN', 'MLTX', 'RENB', 'RVVTF', 'YTEN', 'RZLT', 'ELTX', 'NKGN', 'FARON.HE', 'CCCC', 'BCDA', 'MNOV', 'OXUR.BR', 'CAPR', 'OVID', 'TSHA', 'BTAI', 'AKRO', 'OCGN', 'CNTG', 'OCS', 'ANNX', 'MYCOF', 'HARP', 'MDXH', 'VXRT', 'IMMX', 'GTHX', 'INMB', 'HUMA', 'PHIL.MI', 'IOVA', 'CRSP', 'TOVX', 'EDIT', 'RAIN', 'CFRX', 'PCVX', 'RNAZ', 'NOTV', 'CRBP', 'IMMP', 'ENTX', 'BNOX', 'MDG1.DE', 'BNTX', 'NEXI', 'CADL', 'CELU', 'RAPT', 'CKPT', 'XFOR', 'BXRX', 'CBAY', 'PHGE', 'HOOK', 'BIOS.BR', 'XXII', 'CDMO', 'NXTC', 'ETNB', 
                 'NKTX', 'GLUE', 'EVLO', 'ACIU', 'GMAB', 'PLRX', 'STRO', 'SWAV', 'SEER', 'AEON', 'CTKB', 'GRFS', 'AMRN', 'BIIB', 'BIVI', 'CTMX', 'SGMT', 'BICX', 'STTK', 'XBIT', 'VINC', 'APTO', 'FGEN', 'GLPG', 'TCRX', 'ADPT', 'SWTX']
-
 def get_biotech_symbols():
     try:
         # Open and read the YAML file
@@ -143,4 +141,26 @@ def get_prices(exchange_id, selected_symbols, timeframe, days=1):
         return all_data.sort_values(by='timestamp').reset_index(drop=True)
     except Exception as e:
         print(f"Error fetching data from {exchange_id}: {e}")
+        return pd.DataFrame()
+
+def get_prices_old(exchange_id, selected_symbols, timeframe):
+    try:
+        # Dynamically create an exchange instance based on the exchange_id
+        exchange_class = getattr(ccxt, exchange_id)
+        exchange = exchange_class()
+        
+        all_data = pd.DataFrame()
+
+        for symbol in selected_symbols:
+            limit = 1440  # Maximum number of data points
+            since = exchange.milliseconds() - 86400000  # Last 24 hours
+            ohlcv = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
+            data = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            data['timestamp'] = pd.to_datetime(data['timestamp'], unit='ms')
+            data['symbol'] = symbol
+            all_data = pd.concat([all_data, data])
+
+        return all_data
+    except Exception as e:
+        st.error(f"Error fetching data from {exchange_id}: {e}")
         return pd.DataFrame()

@@ -39,7 +39,7 @@ if 'returns' not in st.session_state:
     st.session_state.returns = None
 if 'exchange' not in st.session_state:
     st.session_state.exchange = None
-        
+
 # Fetch available symbols
 exchange_options = ['biotech']
 position_options = [10000, 20000, 50000, 100000]
@@ -85,7 +85,7 @@ if st.button('Plot Prices'):
         plot_util.plot_prices(st.session_state.data, st.session_state.symbols, selected_benchmark)
     else:
         st.warning("Please select at least one symbol and a timeframe.")
-        
+
 # Backtest button
 if st.button('Backtest'):
     asset1 = selected_symbols[0]
@@ -98,9 +98,9 @@ if st.button('Backtest'):
     take_profit_pct = selected_profit
     input_frequency = selected_interval
     lookback_days = selected_lookback
-    asset1_data, asset2_data = vbt_util.get_equities_data(asset1, asset2, input_frequency, lookback_days)
-    portfolio = vbt_util.backtest_zscore(asset1_data, asset2_data, window, threshold, position_size, 
-                    stop_loss_pct, take_profit_pct)
+    portfolio = vbt_util.backtest_zscore(asset1, asset2, window, threshold, position_size,
+                    stop_loss_pct, take_profit_pct, input_frequency, lookback_days)
+    
     if portfolio is not None:
         st.subheader("Backest Summary")
         st.write(portfolio.stats())
@@ -127,4 +127,3 @@ if st.button('Backtest'):
 if st.button('Store PnL') and st.session_state.trades is not None:
     db_util.store(st.session_state.trades, 'vbt_trades')
     st.success("Backtest PnL saved successfully.")
-

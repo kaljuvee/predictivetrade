@@ -129,8 +129,7 @@ def get_news():
 
 def get_news_all():
     sql_query = text('''
-    SELECT distinct ticker, title, link, topic, published_est, market, hour_of_day FROM news_item
-    ORDER BY published_est DESC
+    SELECT distinct ticker, title, link, topic, published_est, market FROM news_item
     ''')
     try:
         with engine.connect() as conn:

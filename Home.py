@@ -1,8 +1,22 @@
 import streamlit as st
+from st_pages import Page, show_pages
 
 title = "Predictive Trade"
-st.set_page_config(page_title=title)
 st.title(title)
+
+show_pages(
+    [   
+        Page("Home.py", "Home", "🏠"),
+        Page("pages/01_Equities_Event_Prediction.py", "Equities Event Prediction", icon="📈", in_section=False),
+        Page("pages/02_Equities_Event_Analytics.py", "Equities Event Analytics", icon="📊", in_section=False),
+        Page("pages/04_Equities_Correlations.py", "Equities Correlations", icon="📉", in_section=False),
+        Page("pages/05_Equities_Backtest.py", "Equities Backtest", icon="📊", in_section=False),
+        Page("pages/07_Crypto_Correlations.py", "Crypto Correlations", icon="📉", in_section=False),
+        Page("pages/08_Crypto_Backtest.py", "Crypto Backtest", icon="📊", in_section=False),
+        Page("pages/09_Equity_News_Benzinga.py", "Equity News Benzinga", icon="📰", in_section=False),
+        Page("pages/10_Glossary.py", "Glossary", icon="📚", in_section=False),
+    ]
+)
 
 st.markdown("""
 ## Tool Overview
@@ -24,3 +38,4 @@ st.markdown("""
 ## References
 * Read more about [statistical arbitrage with pairs trading and backtesting](https://medium.com/analytics-vidhya/statistical-arbitrage-with-pairs-trading-and-backtesting-ec657b25a368).
 """)
+

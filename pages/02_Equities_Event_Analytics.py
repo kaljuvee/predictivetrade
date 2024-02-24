@@ -146,4 +146,3 @@ st.subheader('Event Frequency by Hour of Day')
 news_df = db_util.get_news_all()
 fig = display_frequency(news_df, 'hour_of_day')
 st.plotly_chart(fig)
-
