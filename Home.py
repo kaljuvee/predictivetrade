@@ -11,6 +11,7 @@ show_pages(
         Page("pages/02_Equities_Event_Analytics.py", "Equities Event Analytics", icon="📊", in_section=False),
         Page("pages/04_Equities_Correlations.py", "Equities Correlations", icon="📉", in_section=False),
         Page("pages/05_Equities_Backtest.py", "Equities Backtest", icon="📊", in_section=False),
+        Page("pages/06_Equities_Mean_Reversion.py", "Equities Mean Reversion", icon="📊", in_section=False),
         Page("pages/07_Crypto_Correlations.py", "Crypto Correlations", icon="📉", in_section=False),
         Page("pages/08_Crypto_Backtest.py", "Crypto Backtest", icon="📊", in_section=False),
         Page("pages/09_Equity_News_Benzinga.py", "Equity News Benzinga", icon="📰", in_section=False),
