@@ -27,7 +27,6 @@ theme_option = st.selectbox("Select Theme", ('Select Theme','Light', 'Dark'))
 if theme_option == 'Dark':
     with open(".streamlit/config.toml", "w") as f:
         f.write("""[theme]
-primaryColor="#1e1e1e"
 backgroundColor="#121212"
 secondaryBackgroundColor="#212121"
 textColor="#ffffff"
@@ -36,7 +35,6 @@ font="sans serif"
 elif theme_option == 'Light':
     with open(".streamlit/config.toml", "w") as f:
         f.write("""[theme]
-primaryColor="#ffffff"
 backgroundColor="#ffffff"
 secondaryBackgroundColor="#f0f0f0"
 textColor="#000000"
