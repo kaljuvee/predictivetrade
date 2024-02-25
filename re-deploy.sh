@@ -13,4 +13,4 @@ git pull
 
 # Start Streamlit app
 echo "Starting Streamlit app..."
-streamlit run Home.py
+nohup streamlit run Home.py &

@@ -19,6 +19,29 @@ show_pages(
     ]
 )
 
+
+# Sidebar to select theme
+theme_option = st.selectbox("Select Theme", ('Select Theme','Light', 'Dark'))
+
+# Function to toggle theme
+if theme_option == 'Dark':
+    with open(".streamlit/config.toml", "w") as f:
+        f.write("""[theme]
+backgroundColor="#121212"
+secondaryBackgroundColor="#212121"
+textColor="#ffffff"
+font="sans serif"
+""")
+elif theme_option == 'Light':
+    with open(".streamlit/config.toml", "w") as f:
+        f.write("""[theme]
+backgroundColor="#ffffff"
+secondaryBackgroundColor="#f0f0f0"
+textColor="#000000"
+font="sans serif"
+""")
+st.warning('Please select the theme and refresh the page to see the changes.')    
+
 st.markdown("""
 ## Tool Overview
 

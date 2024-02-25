@@ -104,3 +104,13 @@
   ```
   This should launch a browser on `localhost:8501`.
 
+## Redeployment Script
+
+- Changing File Permissions:
+```
+chmod +x re-deploy.sh
+```
+- Executing Shell Script:
+```
+./re-deploy.sh
+```

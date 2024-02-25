@@ -61,14 +61,13 @@ selected_profit = st.number_input("Select profit limit (%) for **exit signal**:"
 #selected_strategy = st.selectbox("Select strategy:", ["One-sided", "Two-sided"])
 # Option to choose whether to reinvest profits
 #reinvest_profits = st.selectbox("Reinvest profits:", [True, False])
-selected_benchmark = st.selectbox("Select ETF benchmark::", ['IBB', 'XBI', 'FBT', 'BBH', 'ARKG'])
+selected_benchmark = st.selectbox("Select ETF benchmark::", ["FBIO","KA","QGEN","DYAI","JSPR"])
 selected_interval = st.selectbox("Select tick interval:", ["1m", "5m", "15m", "30m", "1h", "6h", "12h", "1d", "1w"])
 selected_lookback = st.slider("Select lookback window: (days)", min_value=1, max_value=30, value=1, step=1)
 
 available_symbols = exchange_util.biotech_symbols
 st.write('All available symbols: ', available_symbols)
-default_symbols = ['IBB', 'XBI', 'BBH', 'ARKG']
-
+default_symbols = ["FBIO","KA","QGEN","DYAI","JSPR"]
 if default_symbols:
     selected_symbols = st.multiselect("Select symbols to simulate: ", available_symbols, default = default_symbols)
     st.session_state.symbols = selected_symbols

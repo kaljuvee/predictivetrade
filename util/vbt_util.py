@@ -104,7 +104,6 @@ def benchmark_returns(portfolio, benchmark_ticker='SPY'):
     # Fetch benchmark data for the same date range as your backtest
     benchmark_data = yf.download(benchmark_ticker, start=start_date, end=end_date, interval='1d')['Close']
 
-
     # Calculate daily returns for the benchmark
     benchmark_returns = benchmark_data.vbt.pct_change()
 
