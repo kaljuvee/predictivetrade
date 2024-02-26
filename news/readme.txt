@@ -6,7 +6,7 @@ $ pip install -r requirements.txt
 $ python news_item.py -s biotech
 
 # Download spacy
-python -m spacy download en_core_web_sm en_core_web_tr
+python -m spacy download en_core_web_sm en_core_web_trf
 
 # Open AI Fine Tuning using Open AI CLI
 
@@ -19,3 +19,9 @@ echo "export OPENAI_API_KEY='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
 source ~/.bashrc
 
 echo $OPENAI_API_KEY
+
+# Gmail sender setup
+
+You need to setup App password and use it in the function as "password", more info here  https://support.google.com/mail/answer/185833?hl=en
+
+then on your inbox you will get dataframe, containing records with the confidence more or equal to provided (0.8 by default)

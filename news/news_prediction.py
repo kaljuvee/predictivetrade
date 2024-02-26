@@ -7,6 +7,9 @@ from sklearn.metrics import classification_report
 import joblib
 from util import db_util
 import time
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
@@ -62,11 +65,36 @@ def predict_news(df):
     
     return df
 
+def send_email_with_high_confidence(df, confidence_threshold, sender_email, sender_password, receiver_email):
+    # Filter rows with confidence greater than the threshold
+    high_confidence_df = df[df['confidence'] >= confidence_threshold]
+    
+    # If no rows match the condition, return
+    if high_confidence_df.empty:
+        return
+    
+    # Construct the email message
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = 'High Confidence Predictions'
+    
+    # Create email body with the filtered DataFrame
+    body = high_confidence_df.to_html(index=False)
+    msg.attach(MIMEText(body, 'html'))
+    
+    # Connect to SMTP server and send the email
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+
 
 def main():
     # Load your dataset
     df = db_util.get_news_all()
     pred_df = predict_news(df)
+    send_email_with_high_confidence(pred_df, 0.8, "", "", "") # Check readme for gmail setup
     pred_df.to_csv('predictions.csv')
     db_util.update_prediction(df)
    
