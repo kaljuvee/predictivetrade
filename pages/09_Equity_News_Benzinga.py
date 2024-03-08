@@ -3,9 +3,15 @@ import pandas as pd
 from alpaca_trade_api import REST
 from datetime import datetime, timedelta
 import pytz
+import os
+from dotenv import load_dotenv
 
-API_KEY = 'PKWSHV3AS4J71TGOQEOC'
-API_SECRET = 'wffi5PYdLHI2N/6Kfqx6LBTuVlfURGgOp9u5mXo5'
+# Load the environment variables from the .env file
+load_dotenv()
+
+# Access the environment variables
+API_KEY = os.getenv('ALPACA_API_KEY')
+API_SECRET = os.getenv('ALPACA_API_SECRET')
 
 # List of tickers
 keys_list = [
@@ -16,6 +22,7 @@ keys_list = [
     "CDTX", "NTLA", "ARQT", "TLSA", "PCIB.OL", "SANN.SW"
 ]
 
+#st.cache(show_spinner=False)
 def get_news(ticker, start_date, end_date, limit=50):
     rest_client = REST(API_KEY, API_SECRET)
     news_items = rest_client.get_news(ticker, start_date, end_date)

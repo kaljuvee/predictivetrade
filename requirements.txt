@@ -24,3 +24,4 @@ statsmodels
 reportlab
 st_pages
 pytrends
+python-dotenv
