@@ -5,24 +5,26 @@ import traceback
 import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+from dotenv import load_dotenv
+import os
+# Load the environment variables from the .env file
+load_dotenv()
 
 # Create a logger object
 logger = logging.getLogger(__name__)
 
-# Database connection parameters (you'll need to fill these in)
-# db_params = {
-#    'dbname': 'altsignals-beta',
-#    'user': 'julian',
-#    'password': 'AltData2$2',
-#    'host': '34.88.153.82',
-#    'port': '5432',  # default is 5432 for PostgreSQL
-#}
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PWD = os.getenv('DB_PWD')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+
 db_params = {
-    'dbname': 'pddeswvh',
-    'user': 'pddeswvh',
-    'password': 'uRN_JtBBpy6BAHTgkAiZKKNW05LB_U_z',
-    'host': 'trumpet.db.elephantsql.com',
-    'port': '5432',  # default is 5432 for PostgreSQL
+    'dbname': DB_NAME,
+    'user': DB_USER,
+    'password': DB_PWD,
+    'host': DB_HOST,
+    'port': DB_PORT,  # default is 5432 for PostgreSQL
 }
 # postgres://pddeswvh:uRN_JtBBpy6BAHTgkAiZKKNW05LB_U_z@trumpet.db.elephantsql.com/pddeswvh
 
