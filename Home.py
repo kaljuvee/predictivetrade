@@ -15,7 +15,7 @@ show_pages(
         Page("pages/07_Crypto_Correlations.py", "Crypto Correlations", icon="📉", in_section=False),
         Page("pages/08_Crypto_Backtest.py", "Crypto Backtest", icon="📊", in_section=False),
         Page("pages/09_Equity_News_Benzinga.py", "Equity News Benzinga", icon="📰", in_section=False),
-        Page("pages/10_Google_Trends.py", "Glossary", icon="📉", in_section=False),
+        Page("pages/10_Google_Trends.py", "Google Trends", icon="📉", in_section=False),
         Page("pages/20_Glossary.py", "Glossary", icon="📚", in_section=False),
     ]
 )
