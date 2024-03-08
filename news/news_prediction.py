@@ -20,7 +20,6 @@ def preprocess(text):
     doc = nlp(text)
     return " ".join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct])
 
-
 def predict_news(df):
     # Ensure all text transformations applied during training are mirrored here
     transform_topic = lambda topic: topic.lower().replace(" ", "_").replace("/", "_").replace("&", "").replace("'", "")
@@ -65,6 +64,36 @@ def predict_news(df):
     
     return df
 
+ses_smtp_server = 'email-smtp.eu-north-1.amazonaws.com'
+ses_smtp_port = 587  # Use 587 for STARTTLS or 465 for SSL/TLS
+ses_smtp_username = 'AKIAV72VFJHAHPOBDIVJ'
+ses_smtp_password = 'BMm56WkMRoKTyEnXmrxnd9fJos0itBplCzSqoISQGj9S'
+from_addr = 'info@predictivelabs.co.uk'
+to_addr = 'kaljuvee@gmail.com'
+
+def send_mail(df, confidence_threshold, to_addr):
+    high_confidence_df = df[df['confidence'] >= confidence_threshold]
+    # If no rows match the condition, return
+    if high_confidence_df.empty:
+        return
+    msg = MIMEMultipart()
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Subject'] = 'High Confidence Predictions'
+    body = high_confidence_df.to_html(index=False)
+    msg.attach(MIMEText(body, 'html'))
+    try:
+        print('Attempting to send email')
+        server = smtplib.SMTP(ses_smtp_server, ses_smtp_port)
+        server.starttls()  # Secure the connection
+        server.login(ses_smtp_username, ses_smtp_password)
+        text = msg.as_string()
+        server.sendmail(from_addr, to_addr, text)
+        server.quit()
+        print('Email sent successfully!')
+    except Exception as e:
+        print(f'Failed to send email: {e}')
+
 def send_email_with_high_confidence(df, confidence_threshold, sender_email, sender_password, receiver_email):
     # Filter rows with confidence greater than the threshold
     high_confidence_df = df[df['confidence'] >= confidence_threshold]
@@ -84,17 +113,18 @@ def send_email_with_high_confidence(df, confidence_threshold, sender_email, send
     msg.attach(MIMEText(body, 'html'))
     
     # Connect to SMTP server and send the email
-    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+    with smtplib.SMTP(ses_smtp_server, ses_smtp_port) as server:
         server.starttls()
-        server.login(sender_email, sender_password)
+        server.login(from_addr, ses_smtp_password)
         server.send_message(msg)
-
-
+        print('Email sent successfully!')
+        
 def main():
     # Load your dataset
     df = db_util.get_news_all()
     pred_df = predict_news(df)
-    send_email_with_high_confidence(pred_df, 0.8, "", "", "") # Check readme for gmail setup
+    #send_email_with_high_confidence(pred_df, 0.8, "", "", "") # Check readme for gmail setup
+    send_mail(pred_df, 0.6, to_addr)
     pred_df.to_csv('predictions.csv')
     db_util.update_prediction(df)
    
