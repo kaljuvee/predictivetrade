@@ -116,7 +116,7 @@ selected_tag = st.selectbox('Select tag', list(tags.keys()))
 selected_symbol_cur = symbols[selected_pair]
 
 # Get the symbol for the selected tag
-#selected_symbol_tag = tags[selected_tag]
+selected_symbol_tag = tags[selected_tag]
 
 
 # Date selection with default values
