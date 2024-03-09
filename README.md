@@ -110,3 +110,10 @@
   ```
   This should launch a browser on `localhost:8501`.
 
+## Killing / Restarting Streamlikt
+
+  ```
+  pkill -f 'streamlit run Home.py'
+  streamlit run Home.py &
+  ```
+
