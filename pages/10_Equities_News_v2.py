@@ -116,7 +116,7 @@ selected_tag = st.selectbox('Select tag', list(tags.keys()))
 selected_symbol_cur = symbols[selected_pair]
 
 # Get the symbol for the selected tag
-selected_symbol_tag = tags[selected_tag]
+#selected_symbol_tag = tags[selected_tag]
 
 
 # Date selection with default values
@@ -128,7 +128,6 @@ end_date = st.date_input('End date: ', value=today)
 # Fetch FX news for the selected symbol and date range
 if (selected_symbol_cur or selected_symbol_tag) and start_date and end_date:
     news_df = fetch_news(selected_symbol_cur, start_date, end_date, api_key, selected_symbol_tag)
-
     # Display the news in a table
     if not news_df.empty:
         st.write(news_df)
