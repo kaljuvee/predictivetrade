@@ -94,9 +94,8 @@ def get_prices(exchange):
 
 def get_news():
     sql_query = text('''
-    SELECT distinct ticker, title, link, topic, published_est, market FROM news_item 
+    SELECT distinct ticker, title, link, topic, published_est, market, hour_of_day FROM news_item 
     ORDER BY published_est DESC
-    LIMIT 1000
     ''')
     try:
         with engine.connect() as conn:

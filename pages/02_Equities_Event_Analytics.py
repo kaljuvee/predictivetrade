@@ -28,7 +28,7 @@ def display_frequency(df, hour_column):
     # Create the frequency chart using Plotly
     fig = px.bar(hourly_counts, x=hour_column, y='counts',
                  labels={hour_column: 'Hour of Day', 'counts': 'Counts'},
-                 title='Frequency Chart by Hour of Day',
+                 title='Frequency Chart by Hour of Day (EST)',
                  template="plotly_white")  # Using a white background for better readability
 
     # Show the figure
@@ -144,5 +144,6 @@ st.plotly_chart(fig)
 
 st.subheader('Event Frequency by Hour of Day')
 news_df = db_util.get_news_all()
+st.write('Latest news:', news_df.head())
 fig = display_frequency(news_df, 'hour_of_day')
 st.plotly_chart(fig)
